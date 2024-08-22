@@ -1,3 +1,4 @@
+
 #include "laser_tag_view.h"
 #include "laser_tag_icons.h"
 #include <furi.h>
@@ -18,25 +19,40 @@ typedef struct {
 
 static void laser_tag_view_draw_callback(Canvas* canvas, void* model) {
     LaserTagViewModel* m = model;
+    furi_assert(m);
+    furi_assert(canvas);
 
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
 
     canvas_draw_icon(canvas, 0, 0, m->team == TeamRed ? TEAM_RED_ICON : TEAM_BLUE_ICON);
     canvas_draw_icon(canvas, 0, 10, HEALTH_ICON);
-    canvas_draw_str_aligned(canvas, 20, 14, AlignLeft, AlignBottom, furi_string_get_cstr(furi_string_alloc_printf("%d", m->health)));
+    FuriString* str = furi_string_alloc_printf("%d", m->health);
+    canvas_draw_str_aligned(canvas, 20, 14, AlignLeft, AlignBottom, furi_string_get_cstr(str));
+
     canvas_draw_icon(canvas, 0, 20, AMMO_ICON);
-    canvas_draw_str_aligned(canvas, 20, 24, AlignLeft, AlignBottom, furi_string_get_cstr(furi_string_alloc_printf("%d", m->ammo)));
+    furi_string_reset(str);
+    furi_string_printf(str, "%d", m->ammo);
+    canvas_draw_str_aligned(canvas, 20, 24, AlignLeft, AlignBottom, furi_string_get_cstr(str));
+
     canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, "Score:");
-    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, furi_string_get_cstr(furi_string_alloc_printf("%d", m->score)));
+    furi_string_reset(str);
+    furi_string_printf(str, "%d", m->score);
+    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, furi_string_get_cstr(str));
+
     uint32_t minutes = m->game_time / 60;
     uint32_t seconds = m->game_time % 60;
-    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignBottom, furi_string_get_cstr(furi_string_alloc_printf("%02ld:%02ld", minutes, seconds)));
+    furi_string_reset(str);
+    furi_string_printf(str, "%02ld:%02ld", minutes, seconds);
+    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignBottom, furi_string_get_cstr(str));
+
     canvas_draw_icon(canvas, 112, 0, LASER_GUN_ICON);
 
     if(m->game_over) {
         canvas_draw_icon(canvas, 56, 28, GAME_OVER_ICON);
     }
+
+    furi_string_free(str);
 }
 
 static bool laser_tag_view_input_callback(InputEvent* event, void* context) {
@@ -47,24 +63,38 @@ static bool laser_tag_view_input_callback(InputEvent* event, void* context) {
 
 LaserTagView* laser_tag_view_alloc() {
     LaserTagView* laser_tag_view = malloc(sizeof(LaserTagView));
+    if(!laser_tag_view) {
+        return NULL;
+    }
+
     laser_tag_view->view = view_alloc();
+    if(!laser_tag_view->view) {
+        free(laser_tag_view);
+        return NULL;
+    }
+
     view_set_context(laser_tag_view->view, laser_tag_view);
     view_allocate_model(laser_tag_view->view, ViewModelTypeLocking, sizeof(LaserTagViewModel));
     view_set_draw_callback(laser_tag_view->view, laser_tag_view_draw_callback);
     view_set_input_callback(laser_tag_view->view, laser_tag_view_input_callback);
+
     return laser_tag_view;
 }
 
+void laser_tag_view_free(LaserTagView* laser_tag_view) {
+    if(!laser_tag_view) return;
+    if(laser_tag_view->view) {
+        view_free(laser_tag_view->view);
+    }
+    free(laser_tag_view);
+}
+
 void laser_tag_view_draw(View* view, Canvas* canvas) {
+    furi_assert(view);
+    furi_assert(canvas);
     LaserTagViewModel* model = view_get_model(view);
     laser_tag_view_draw_callback(canvas, model);
     view_commit_model(view, false);
-}
-
-void laser_tag_view_free(LaserTagView* laser_tag_view) {
-    furi_assert(laser_tag_view);
-    view_free(laser_tag_view->view);
-    free(laser_tag_view);
 }
 
 View* laser_tag_view_get_view(LaserTagView* laser_tag_view) {

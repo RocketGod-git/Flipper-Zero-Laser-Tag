@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <stdint.h>
@@ -16,7 +17,6 @@ typedef enum {
 typedef struct GameState GameState;
 
 GameState* game_state_alloc();
-void game_state_free(GameState* state);
 void game_state_reset(GameState* state);
 
 void game_state_set_team(GameState* state, LaserTagTeam team);
@@ -40,5 +40,5 @@ bool game_state_is_game_over(GameState* state);
 void game_state_set_game_over(GameState* state, bool game_over);
 
 #define INITIAL_HEALTH 100
-#define INITIAL_AMMO 100
-#define MAX_HEALTH 100
+#define INITIAL_AMMO   100
+#define MAX_HEALTH     100

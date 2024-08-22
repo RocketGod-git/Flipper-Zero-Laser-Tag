@@ -1,3 +1,3 @@
-# Flipper Zero - Laser Tag
+# Flipper Zero - Development Toolkit
 
-Not working, yet. 
+Short description.
