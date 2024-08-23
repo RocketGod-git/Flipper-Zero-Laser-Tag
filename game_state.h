@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <stdint.h>
@@ -10,6 +9,7 @@ typedef enum {
 } LaserTagTeam;
 
 typedef enum {
+    LaserTagStateSplashScreen,
     LaserTagStateTeamSelect,
     LaserTagStateGame,
 } LaserTagState;

@@ -28,22 +28,33 @@ static void laser_tag_app_timer_callback(void* context) {
     furi_assert(context);
     LaserTagApp* app = context;
     FURI_LOG_D(TAG, "Timer callback triggered");
-    if(app->game_state) {
-        game_state_update_time(app->game_state, 1);
-        FURI_LOG_D(TAG, "Updated game time by 1");
-        if(app->view) {
-            FURI_LOG_D(TAG, "Updating view with the latest game state");
-            laser_tag_view_update(app->view, app->game_state);
-            app->need_redraw = true;
+
+    if(app->state == LaserTagStateSplashScreen) {
+        if(game_state_get_time(app->game_state) >= 2) {
+            FURI_LOG_I(TAG, "Splash screen time over, switching to TeamSelect");
+            app->state = LaserTagStateTeamSelect;
+            game_state_reset(app->game_state);
+            FURI_LOG_D(TAG, "Game state reset after splash screen");
+        } else {
+            FURI_LOG_D(TAG, "Updating splash screen time");
+            game_state_update_time(app->game_state, 1);
         }
+    } else if(app->state == LaserTagStateGame) {
+        FURI_LOG_D(TAG, "Updating game time by 1 second");
+        game_state_update_time(app->game_state, 1);
+    }
+
+    if(app->view) {
+        FURI_LOG_D(TAG, "Updating view with the latest game state");
+        laser_tag_view_update(app->view, app->game_state);
+        app->need_redraw = true;
     }
 }
 
 static void laser_tag_app_input_callback(InputEvent* input_event, void* context) {
     furi_assert(context);
     LaserTagApp* app = context;
-    FURI_LOG_D(
-        TAG, "Input callback triggered: type=%d, key=%d", input_event->type, input_event->key);
+    FURI_LOG_D(TAG, "Input event received: type=%d, key=%d", input_event->type, input_event->key);
     furi_message_queue_put(app->event_queue, input_event, 0);
     FURI_LOG_D(TAG, "Input event queued successfully");
 }
@@ -53,7 +64,12 @@ static void laser_tag_app_draw_callback(Canvas* canvas, void* context) {
     LaserTagApp* app = context;
     FURI_LOG_D(TAG, "Entering draw callback");
 
-    if(app->state == LaserTagStateTeamSelect) {
+    if(app->state == LaserTagStateSplashScreen) {
+        FURI_LOG_D(TAG, "Drawing splash screen");
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, 32, 32, "Laser Tag!");
+    } else if(app->state == LaserTagStateTeamSelect) {
         FURI_LOG_D(TAG, "Drawing team selection screen");
         canvas_clear(canvas);
         canvas_set_font(canvas, FontPrimary);
@@ -74,7 +90,7 @@ LaserTagApp* laser_tag_app_alloc() {
         FURI_LOG_E(TAG, "Failed to allocate LaserTagApp");
         return NULL;
     }
-    FURI_LOG_D(TAG, "LaserTagApp struct allocated");
+    FURI_LOG_I(TAG, "LaserTagApp allocated successfully");
 
     memset(app, 0, sizeof(LaserTagApp));
 
@@ -87,14 +103,14 @@ LaserTagApp* laser_tag_app_alloc() {
 
     if(!app->gui || !app->view_port || !app->view || !app->notifications || !app->game_state ||
        !app->event_queue) {
-        FURI_LOG_E(TAG, "Failed to allocate resources");
+        FURI_LOG_E(TAG, "Failed to allocate resources for LaserTagApp");
         laser_tag_app_free(app);
         return NULL;
     }
 
-    app->state = LaserTagStateTeamSelect;
+    app->state = LaserTagStateSplashScreen;
     app->need_redraw = true;
-    FURI_LOG_D(TAG, "Initial state set");
+    FURI_LOG_I(TAG, "Initial state set to SplashScreen");
 
     view_port_draw_callback_set(app->view_port, laser_tag_app_draw_callback, app);
     view_port_input_callback_set(app->view_port, laser_tag_app_input_callback, app);
@@ -107,12 +123,11 @@ LaserTagApp* laser_tag_app_alloc() {
         laser_tag_app_free(app);
         return NULL;
     }
-    FURI_LOG_D(TAG, "Timer allocated");
+    FURI_LOG_I(TAG, "Timer allocated");
 
     furi_timer_start(app->timer, furi_kernel_get_tick_frequency());
     FURI_LOG_D(TAG, "Timer started");
 
-    FURI_LOG_D(TAG, "Laser Tag App allocated successfully");
     return app;
 }
 
@@ -134,7 +149,7 @@ void laser_tag_app_free(LaserTagApp* app) {
     furi_record_close(RECORD_NOTIFICATION);
 
     free(app);
-    FURI_LOG_D(TAG, "Laser Tag App freed");
+    FURI_LOG_I(TAG, "Laser Tag App freed successfully");
 }
 
 void laser_tag_app_fire(LaserTagApp* app) {
@@ -146,46 +161,44 @@ void laser_tag_app_fire(LaserTagApp* app) {
         return;
     }
 
-    FURI_LOG_D(TAG, "Sending infrared signal");
     infrared_controller_send(app->ir_controller);
-    FURI_LOG_D(TAG, "Decreasing ammo by 1");
+    FURI_LOG_D(TAG, "Laser fired, decreasing ammo by 1");
     game_state_decrease_ammo(app->game_state, 1);
-    FURI_LOG_D(TAG, "Notifying with blink blue");
     notification_message(app->notifications, &sequence_blink_blue_100);
+    FURI_LOG_I(TAG, "Notifying user with blink blue");
     app->need_redraw = true;
 }
 
 void laser_tag_app_handle_hit(LaserTagApp* app) {
     furi_assert(app);
-    FURI_LOG_D(TAG, "Handling hit");
+    FURI_LOG_D(TAG, "Handling hit, decreasing health by 10");
 
-    FURI_LOG_D(TAG, "Decreasing health by 10");
     game_state_decrease_health(app->game_state, 10);
-    FURI_LOG_D(TAG, "Notifying with vibration");
     notification_message(app->notifications, &sequence_vibro_1);
+    FURI_LOG_I(TAG, "Notifying user with vibration");
     app->need_redraw = true;
 }
 
 static bool laser_tag_app_enter_game_state(LaserTagApp* app) {
     furi_assert(app);
-    FURI_LOG_D(TAG, "Entering game state");
+    FURI_LOG_I(TAG, "Entering game state");
 
     app->state = LaserTagStateGame;
-    FURI_LOG_D(TAG, "Resetting game state");
     game_state_reset(app->game_state);
-    FURI_LOG_D(TAG, "Updating view with new game state");
-    laser_tag_view_update(app->view, app->game_state);
+    FURI_LOG_D(TAG, "Game state reset");
 
-    FURI_LOG_D(TAG, "Allocating IR controller");
+    laser_tag_view_update(app->view, app->game_state);
+    FURI_LOG_D(TAG, "View updated with new game state");
+
     app->ir_controller = infrared_controller_alloc();
     if(!app->ir_controller) {
         FURI_LOG_E(TAG, "Failed to allocate IR controller");
         return false;
     }
-    FURI_LOG_D(TAG, "IR controller allocated");
+    FURI_LOG_I(TAG, "IR controller allocated");
 
-    FURI_LOG_D(TAG, "Setting IR controller team");
     infrared_controller_set_team(app->ir_controller, game_state_get_team(app->game_state));
+    FURI_LOG_D(TAG, "IR controller team set");
     app->need_redraw = true;
     return true;
 }
@@ -201,7 +214,6 @@ int32_t laser_tag_app(void* p) {
     }
     FURI_LOG_D(TAG, "LaserTagApp allocated successfully");
 
-    FURI_LOG_D(TAG, "Entering main loop");
     InputEvent event;
     bool running = true;
     while(running) {
@@ -211,22 +223,26 @@ int32_t laser_tag_app(void* p) {
         if(status == FuriStatusOk) {
             FURI_LOG_D(TAG, "Received input event: type=%d, key=%d", event.type, event.key);
             if(event.type == InputTypePress || event.type == InputTypeRepeat) {
-                FURI_LOG_D(TAG, "Processing input event");
-                if(app->state == LaserTagStateTeamSelect) {
+                if(app->state == LaserTagStateSplashScreen ||
+                   app->state == LaserTagStateTeamSelect) {
                     switch(event.key) {
                     case InputKeyLeft:
-                        FURI_LOG_D(TAG, "Selected Red Team");
+                        FURI_LOG_I(TAG, "Red team selected");
                         game_state_set_team(app->game_state, TeamRed);
                         if(!laser_tag_app_enter_game_state(app)) {
                             running = false;
                         }
                         break;
                     case InputKeyRight:
-                        FURI_LOG_D(TAG, "Selected Blue Team");
+                        FURI_LOG_I(TAG, "Blue team selected");
                         game_state_set_team(app->game_state, TeamBlue);
                         if(!laser_tag_app_enter_game_state(app)) {
                             running = false;
                         }
+                        break;
+                    case InputKeyBack:
+                        FURI_LOG_I(TAG, "Back key pressed, exiting");
+                        running = false;
                         break;
                     default:
                         break;
@@ -234,11 +250,11 @@ int32_t laser_tag_app(void* p) {
                 } else {
                     switch(event.key) {
                     case InputKeyBack:
-                        FURI_LOG_D(TAG, "Exiting game");
+                        FURI_LOG_I(TAG, "Back key pressed, exiting");
                         running = false;
                         break;
                     case InputKeyOk:
-                        FURI_LOG_D(TAG, "Firing laser");
+                        FURI_LOG_I(TAG, "OK key pressed, firing laser");
                         laser_tag_app_fire(app);
                         break;
                     default:
@@ -253,21 +269,20 @@ int32_t laser_tag_app(void* p) {
         }
 
         if(app->state == LaserTagStateGame && app->ir_controller) {
-            FURI_LOG_D(TAG, "Game is active");
             if(infrared_controller_receive(app->ir_controller)) {
-                FURI_LOG_D(TAG, "Hit received");
+                FURI_LOG_D(TAG, "Hit received, processing");
                 laser_tag_app_handle_hit(app);
             }
 
             if(game_state_is_game_over(app->game_state)) {
-                FURI_LOG_D(TAG, "Game over");
+                FURI_LOG_I(TAG, "Game over, notifying user with error sequence");
                 notification_message(app->notifications, &sequence_error);
                 running = false;
             }
         }
 
         if(app->need_redraw) {
-            FURI_LOG_D(TAG, "Updating view port");
+            FURI_LOG_D(TAG, "Updating viewport");
             view_port_update(app->view_port);
             app->need_redraw = false;
         }
