@@ -3,6 +3,7 @@
 #include <gui/icon_i.h>
 
 const uint8_t laser_gun_icon_data[] = {
+    0,
     0b00000000,
     0b00000000,
     0b00000001,
@@ -22,6 +23,7 @@ const uint8_t laser_gun_icon_data[] = {
 };
 
 const uint8_t health_icon_data[] = {
+    0,
     0b00001100,
     0b00110000,
     0b00011110,
@@ -41,6 +43,7 @@ const uint8_t health_icon_data[] = {
 };
 
 const uint8_t ammo_icon_data[] = {
+    0,
     0b00011000,
     0b00011000,
     0b00111100,
@@ -60,6 +63,7 @@ const uint8_t ammo_icon_data[] = {
 };
 
 const uint8_t team_red_icon_data[] = {
+    0,
     0b00011000,
     0b00011000,
     0b00111100,
@@ -79,6 +83,7 @@ const uint8_t team_red_icon_data[] = {
 };
 
 const uint8_t team_blue_icon_data[] = {
+    0,
     0b11100111,
     0b11100111,
     0b11000011,
@@ -98,6 +103,7 @@ const uint8_t team_blue_icon_data[] = {
 };
 
 const uint8_t game_over_icon_data[] = {
+    0,
     0b11111111,
     0b11111111,
     0b10000000,

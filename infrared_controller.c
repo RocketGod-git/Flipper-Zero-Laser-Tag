@@ -132,7 +132,7 @@ void infrared_controller_send(InfraredController* controller) {
 
     InfraredMessage message = {
         .protocol = InfraredProtocolNEC,
-        .address = 0x00,
+        .address = 0x42,
         .command = (controller->team == TeamRed) ? IR_COMMAND_RED_TEAM : IR_COMMAND_BLUE_TEAM};
 
     FURI_LOG_I(
@@ -161,7 +161,7 @@ bool infrared_controller_receive(InfraredController* controller) {
 
     infrared_worker_rx_start(controller->worker);
 
-    furi_delay_ms(50);
+    furi_delay_ms(250);
 
     infrared_worker_rx_stop(controller->worker);
 
