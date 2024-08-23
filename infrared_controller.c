@@ -104,9 +104,6 @@ void infrared_controller_free(InfraredController* controller) {
     FURI_LOG_I(TAG, "Freeing InfraredController");
 
     if(controller) {
-        FURI_LOG_I(TAG, "Stopping InfraredWorker RX");
-        infrared_worker_rx_stop(controller->worker);
-
         FURI_LOG_I(TAG, "Freeing InfraredWorker and InfraredSignal");
         infrared_worker_free(controller->worker);
         infrared_signal_free(controller->signal);
