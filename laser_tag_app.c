@@ -116,6 +116,27 @@ static void laser_tag_app_draw_callback(Canvas* canvas, void* context) {
         canvas_draw_circle(canvas, 60, 32, 5);
         canvas_draw_circle(canvas, 60, 32, 2);
 
+    } else if(app->state == LaserTagStateGameOver) {
+        canvas_clear(canvas);
+
+        canvas_set_font(canvas, FontPrimary);
+
+        // Display "GAME OVER!" centered on the screen
+        canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignCenter, "GAME OVER!");
+
+        // Add a solid block border around the screen
+        for(int x = 0; x < 128; x += 8) {
+            canvas_draw_box(canvas, x, 0, 8, 8);
+            canvas_draw_box(canvas, x, 56, 8, 8);
+        }
+        for(int y = 8; y < 56; y += 8) {
+            canvas_draw_box(canvas, 0, y, 8, 8);
+            canvas_draw_box(canvas, 120, y, 8, 8);
+        }
+
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to Restart");
+
     } else if(app->view) {
         FURI_LOG_D(TAG, "Drawing game view");
         laser_tag_view_draw(laser_tag_view_get_view(app->view), canvas);
@@ -222,10 +243,11 @@ void laser_tag_app_handle_hit(LaserTagApp* app) {
     FURI_LOG_I(TAG, "Notifying user with vibration");
 
     if(game_state_is_game_over(app->game_state)) {
-        FURI_LOG_I(TAG, "Game over, playing game over sound");
+        FURI_LOG_I(TAG, "Game over, switching to Game Over screen");
 
         notification_message(app->notifications, &sequence_error);
 
+        app->state = LaserTagStateGameOver;
         app->need_redraw = true;
     }
 }
@@ -298,18 +320,34 @@ int32_t laser_tag_app(void* p) {
                     default:
                         break;
                     }
-                } else {
-                    switch(event.key) {
-                    case InputKeyBack:
-                        FURI_LOG_I(TAG, "Back key pressed, exiting");
-                        running = false;
-                        break;
-                    case InputKeyOk:
-                        FURI_LOG_I(TAG, "OK key pressed, firing laser");
-                        laser_tag_app_fire(app);
-                        break;
-                    default:
-                        break;
+                } else if(app->state == LaserTagStateGameOver) {
+                    if(event.key == InputKeyOk) {
+                        FURI_LOG_I(TAG, "OK key pressed, restarting game");
+
+                        // Restart game by resetting game state and transitioning to splash screen
+                        game_state_reset(app->game_state);
+                        app->state = LaserTagStateSplashScreen;
+                        app->need_redraw = true;
+                    }
+                } else if(app->state == LaserTagStateGame) {
+                    if(event.key == InputKeyDown && game_state_get_ammo(app->game_state) == 0) {
+                        // Reload ammo when Down button is pressed and ammo is depleted
+                        FURI_LOG_I(TAG, "Down key pressed, reloading ammo");
+                        game_state_increase_ammo(app->game_state, INITIAL_AMMO);
+                        app->need_redraw = true;
+                    } else {
+                        switch(event.key) {
+                        case InputKeyBack:
+                            FURI_LOG_I(TAG, "Back key pressed, exiting");
+                            running = false;
+                            break;
+                        case InputKeyOk:
+                            FURI_LOG_I(TAG, "OK key pressed, firing laser");
+                            laser_tag_app_fire(app);
+                            break;
+                        default:
+                            break;
+                        }
                     }
                 }
             }
@@ -328,7 +366,16 @@ int32_t laser_tag_app(void* p) {
             if(game_state_is_game_over(app->game_state)) {
                 FURI_LOG_I(TAG, "Game over, notifying user with error sequence");
                 notification_message(app->notifications, &sequence_error);
-                running = false;
+                // Stop game logic after game over
+                app->state = LaserTagStateGameOver;
+                app->need_redraw = true;
+            }
+        } else if(app->state == LaserTagStateGameOver) {
+            if(event.key == InputKeyOk) {
+                FURI_LOG_I(TAG, "OK key pressed, restarting game");
+                game_state_reset(app->game_state);
+                app->state = LaserTagStateSplashScreen;
+                app->need_redraw = true;
             }
         }
 

@@ -34,7 +34,7 @@ static void laser_tag_view_draw_callback(Canvas* canvas, void* model) {
     canvas_draw_box(canvas, 56, 36, (58 * m->ammo) / 100, 8);
 
     if(m->ammo == 0) {
-        canvas_draw_str_aligned(canvas, 5, 55, AlignLeft, AlignBottom, "Press 'X' to Reload");
+        canvas_draw_str_aligned(canvas, 5, 55, AlignLeft, AlignBottom, "Press 'Down' to Reload");
     }
 
     uint32_t minutes = m->game_time / 60;

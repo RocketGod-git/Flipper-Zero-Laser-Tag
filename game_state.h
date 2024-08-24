@@ -12,6 +12,7 @@ typedef enum {
     LaserTagStateSplashScreen,
     LaserTagStateTeamSelect,
     LaserTagStateGame,
+    LaserTagStateGameOver,
 } LaserTagState;
 
 typedef struct GameState GameState;
