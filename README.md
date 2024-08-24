@@ -14,6 +14,11 @@ Flipper Zero Laser Tag brings your favorite laser tag experience to your Flipper
 
 ## 📸 Screenshots
 
+![Screenshot-20240823-224628](https://github.com/user-attachments/assets/5836ee25-23ce-4845-b342-2b360e32e341)
+![Screenshot-20240823-224637](https://github.com/user-attachments/assets/119e8e80-49fc-421a-bc61-ec7185d05bc0)
+![Screenshot-20240823-224640](https://github.com/user-attachments/assets/7a9bdb69-42fe-48d7-9e5f-7616e2f68d10)
+![Screenshot-20240823-224647](https://github.com/user-attachments/assets/d5e10e1b-64a5-4a72-a624-2cfe2237add5)
+
 ## 🕹️ How to Play
 
 1. **Select Your Team**: Use the Left or Right button to choose between Red or Blue team.
