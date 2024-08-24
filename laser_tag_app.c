@@ -65,17 +65,55 @@ static void laser_tag_app_draw_callback(Canvas* canvas, void* context) {
     FURI_LOG_D(TAG, "Entering draw callback");
 
     if(app->state == LaserTagStateSplashScreen) {
-        FURI_LOG_D(TAG, "Drawing splash screen");
         canvas_clear(canvas);
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 32, 32, "Laser Tag!");
-    } else if(app->state == LaserTagStateTeamSelect) {
-        FURI_LOG_D(TAG, "Drawing team selection screen");
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 32, 32, "Select Team:");
+        canvas_draw_str(canvas, 5, 20, "Laser Tag!");
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 32, 48, "LEFT: Red  RIGHT: Blue");
+        canvas_draw_str(canvas, 5, 40, "https://github.com/");
+        canvas_draw_str(canvas, 5, 50, "RocketGod-git/");
+        canvas_draw_str(canvas, 5, 60, "Flipper-Zero-Laser-Tag");
+        canvas_draw_frame(canvas, 0, 0, 128, 64);
+        canvas_draw_line(canvas, 0, 30, 127, 30);
+        canvas_draw_circle(canvas, 110, 15, 12);
+        canvas_draw_disc(canvas, 110, 15, 4);
+
+    } else if(app->state == LaserTagStateTeamSelect) {
+        canvas_clear(canvas);
+        canvas_draw_frame(canvas, 0, 0, 128, 64);
+
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, 14, 13, "SELECT TEAM");
+
+        canvas_draw_line(canvas, 0, 16, 127, 16);
+
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 5, 30, "LEFT");
+        canvas_draw_str(canvas, 95, 30, "RIGHT");
+
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, 10, 45, "RED");
+        canvas_draw_str(canvas, 95, 45, "BLUE");
+
+        // Gun icon for Red team
+        canvas_draw_line(canvas, 10, 50, 25, 50);
+        canvas_draw_line(canvas, 25, 50, 25, 55);
+        canvas_draw_line(canvas, 10, 55, 25, 55);
+        canvas_draw_line(canvas, 15, 55, 15, 60);
+
+        // Gun icon for Blue team (facing left)
+        canvas_draw_line(canvas, 95, 50, 110, 50);
+        canvas_draw_line(canvas, 95, 50, 95, 55);
+        canvas_draw_line(canvas, 95, 55, 110, 55);
+        canvas_draw_line(canvas, 105, 55, 105, 60);
+
+        // Laser beams
+        canvas_draw_line(canvas, 25, 52, 60, 32);
+        canvas_draw_line(canvas, 95, 52, 60, 32);
+
+        // Targets where lasers hit
+        canvas_draw_circle(canvas, 60, 32, 5);
+        canvas_draw_circle(canvas, 60, 32, 2);
+
     } else if(app->view) {
         FURI_LOG_D(TAG, "Drawing game view");
         laser_tag_view_draw(laser_tag_view_get_view(app->view), canvas);
