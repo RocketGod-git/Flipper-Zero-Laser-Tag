@@ -23,6 +23,8 @@ struct LaserTagApp {
 };
 
 const NotificationSequence sequence_vibro_1 = {&message_vibro_on, &message_vibro_off, NULL};
+const NotificationSequence sequence_short_beep =
+    {&message_note_c4, &message_delay_50, &message_sound_off, NULL};
 
 static void laser_tag_app_timer_callback(void* context) {
     furi_assert(context);
@@ -203,9 +205,11 @@ void laser_tag_app_fire(LaserTagApp* app) {
     FURI_LOG_D(TAG, "Laser fired, decreasing ammo by 1");
     game_state_decrease_ammo(app->game_state, 1);
 
+    notification_message(app->notifications, &sequence_short_beep);
+
     notification_message(app->notifications, &sequence_blink_blue_100);
 
-    FURI_LOG_I(TAG, "Notifying user with blink blue");
+    FURI_LOG_I(TAG, "Notifying user with blink blue and short beep");
     app->need_redraw = true;
 }
 
