@@ -202,7 +202,9 @@ void laser_tag_app_fire(LaserTagApp* app) {
     infrared_controller_send(app->ir_controller);
     FURI_LOG_D(TAG, "Laser fired, decreasing ammo by 1");
     game_state_decrease_ammo(app->game_state, 1);
+
     notification_message(app->notifications, &sequence_blink_blue_100);
+
     FURI_LOG_I(TAG, "Notifying user with blink blue");
     app->need_redraw = true;
 }
@@ -214,7 +216,14 @@ void laser_tag_app_handle_hit(LaserTagApp* app) {
     game_state_decrease_health(app->game_state, 10);
     notification_message(app->notifications, &sequence_vibro_1);
     FURI_LOG_I(TAG, "Notifying user with vibration");
-    app->need_redraw = true;
+
+    if(game_state_is_game_over(app->game_state)) {
+        FURI_LOG_I(TAG, "Game over, playing game over sound");
+
+        notification_message(app->notifications, &sequence_error);
+
+        app->need_redraw = true;
+    }
 }
 
 static bool laser_tag_app_enter_game_state(LaserTagApp* app) {

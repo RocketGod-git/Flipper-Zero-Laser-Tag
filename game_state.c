@@ -5,7 +5,6 @@
 struct GameState {
     LaserTagTeam team;
     uint8_t health;
-    uint16_t score;
     uint16_t ammo;
     uint32_t game_time;
     bool game_over;
@@ -19,7 +18,6 @@ GameState* game_state_alloc() {
     }
     state->team = TeamRed;
     state->health = INITIAL_HEALTH;
-    state->score = 0;
     state->ammo = INITIAL_AMMO;
     state->game_time = 0;
     state->game_over = false;
@@ -30,7 +28,6 @@ GameState* game_state_alloc() {
 void game_state_reset(GameState* state) {
     furi_assert(state);
     state->health = INITIAL_HEALTH;
-    state->score = 0;
     state->ammo = INITIAL_AMMO;
     state->game_time = 0;
     state->game_over = false;
@@ -69,17 +66,6 @@ void game_state_increase_health(GameState* state, uint8_t amount) {
 uint8_t game_state_get_health(GameState* state) {
     furi_assert(state);
     return state->health;
-}
-
-void game_state_increase_score(GameState* state, uint16_t points) {
-    furi_assert(state);
-    state->score += points;
-    FURI_LOG_I("GameState", "Score increased to %d", state->score);
-}
-
-uint16_t game_state_get_score(GameState* state) {
-    furi_assert(state);
-    return state->score;
 }
 
 void game_state_decrease_ammo(GameState* state, uint16_t amount) {

@@ -26,9 +26,6 @@ void game_state_decrease_health(GameState* state, uint8_t amount);
 void game_state_increase_health(GameState* state, uint8_t amount);
 uint8_t game_state_get_health(GameState* state);
 
-void game_state_increase_score(GameState* state, uint16_t points);
-uint16_t game_state_get_score(GameState* state);
-
 void game_state_decrease_ammo(GameState* state, uint16_t amount);
 void game_state_increase_ammo(GameState* state, uint16_t amount);
 uint16_t game_state_get_ammo(GameState* state);

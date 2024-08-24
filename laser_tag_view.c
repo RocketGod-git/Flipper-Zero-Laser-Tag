@@ -1,6 +1,4 @@
-
 #include "laser_tag_view.h"
-#include "laser_tag_icons.h"
 #include <furi.h>
 #include <gui/elements.h>
 
@@ -12,7 +10,6 @@ typedef struct {
     LaserTagTeam team;
     uint8_t health;
     uint16_t ammo;
-    uint16_t score;
     uint32_t game_time;
     bool game_over;
 } LaserTagViewModel;
@@ -25,31 +22,28 @@ static void laser_tag_view_draw_callback(Canvas* canvas, void* model) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
 
-    canvas_draw_icon(canvas, 0, 0, m->team == TeamRed ? TEAM_RED_ICON : TEAM_BLUE_ICON);
-    canvas_draw_icon(canvas, 0, 10, HEALTH_ICON);
-    FuriString* str = furi_string_alloc_printf("%d", m->health);
-    canvas_draw_str_aligned(canvas, 20, 14, AlignLeft, AlignBottom, furi_string_get_cstr(str));
+    canvas_draw_str_aligned(
+        canvas, 5, 10, AlignLeft, AlignBottom, m->team == TeamRed ? "Team: Red" : "Team: Blue");
 
-    canvas_draw_icon(canvas, 0, 20, AMMO_ICON);
-    furi_string_reset(str);
-    furi_string_printf(str, "%d", m->ammo);
-    canvas_draw_str_aligned(canvas, 20, 24, AlignLeft, AlignBottom, furi_string_get_cstr(str));
+    canvas_draw_str_aligned(canvas, 5, 25, AlignLeft, AlignBottom, "Health:");
+    canvas_draw_frame(canvas, 55, 20, 60, 10);
+    canvas_draw_box(canvas, 56, 21, (58 * m->health) / 100, 8);
 
-    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, "Score:");
-    furi_string_reset(str);
-    furi_string_printf(str, "%d", m->score);
-    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, furi_string_get_cstr(str));
+    canvas_draw_str_aligned(canvas, 5, 40, AlignLeft, AlignBottom, "Ammo:");
+    canvas_draw_frame(canvas, 55, 35, 60, 10);
+    canvas_draw_box(canvas, 56, 36, (58 * m->ammo) / 100, 8);
+
+    if(m->ammo == 0) {
+        canvas_draw_str_aligned(canvas, 5, 55, AlignLeft, AlignBottom, "Press 'X' to Reload");
+    }
 
     uint32_t minutes = m->game_time / 60;
     uint32_t seconds = m->game_time % 60;
-    furi_string_reset(str);
-    furi_string_printf(str, "%02ld:%02ld", minutes, seconds);
-    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignBottom, furi_string_get_cstr(str));
-
-    canvas_draw_icon(canvas, 112, 0, LASER_GUN_ICON);
+    FuriString* str = furi_string_alloc_printf("%02ld:%02ld", minutes, seconds);
+    canvas_draw_str_aligned(canvas, 5, 60, AlignLeft, AlignBottom, furi_string_get_cstr(str));
 
     if(m->game_over) {
-        canvas_draw_icon(canvas, 56, 28, GAME_OVER_ICON);
+        canvas_draw_str_aligned(canvas, 5, 75, AlignLeft, AlignBottom, "GAME OVER");
     }
 
     furi_string_free(str);
@@ -113,7 +107,6 @@ void laser_tag_view_update(LaserTagView* laser_tag_view, GameState* game_state) 
             model->team = game_state_get_team(game_state);
             model->health = game_state_get_health(game_state);
             model->ammo = game_state_get_ammo(game_state);
-            model->score = game_state_get_score(game_state);
             model->game_time = game_state_get_time(game_state);
             model->game_over = game_state_is_game_over(game_state);
         },
