@@ -1,19 +1,20 @@
-# Manifest required for the Flipper Application Catalog
-# https://github.com/flipperdevices/flipper-application-catalog/blob/main/documentation/Manifest.md
-author: "@CodyTolene"
-category: "Sub-GHz"
-changelog: "@./docs/CHANGELOG.md"
-description: "@./docs/README.md"
-icon: "icons/toolkit.png"
-id: "toolkit"
-name: "Development Toolkit"
+author: '@RocketGod-git'
+category: 'Games'
+changelog: '@./docs/CHANGELOG.md'
+description: '@./docs/README.md'
+icon: 'icons/laser_tag_10px.png'
+id: 'lasertag'
+name: 'Laser Tag'
 screenshots:
-  - "screenshots/todo.png"
-short_description: "A Flipper Zero Development Toolkit for all to use!"
+  - 'screenshots/Screenshot1.png'
+  - 'screenshots/Screenshot2.png'
+  - 'screenshots/Screenshot3.png'
+  - 'screenshots/Screenshot4.png'
+short_description: 'Flipper Zero Laser Tag brings your favorite laser tag experience to your Flipper Zero device!'
 sourcecode:
   location:
-    commit_sha: ... # Update this with the latest commit sha
-    origin: https://github.com/CodyTolene/Flipper-Zero-Development-Toolkit.git
-    subdir: src-fap
+    commit_sha: 59b65a9
+    origin: https://github.com/RocketGod-git/Flipper-Zero-Laser-Tag.git
+    subdir:
   type: git
 version: 1.0
