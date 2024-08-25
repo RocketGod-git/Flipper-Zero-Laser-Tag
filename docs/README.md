@@ -4,7 +4,7 @@
 
 Flipper Zero Laser Tag brings your favorite laser tag experience to your Flipper Zero device! Whether you’re battling friends or just practicing your aim, this open-source project lets you dominate the laser tag arena with just your Flipper Zero.
 
-### ⚡ Key Features:
+## ⚡ Key Features:
 
 - **Team Battles**: Choose your team and face off in epic Red vs. Blue laser battles.
 - **Real-Time Gameplay**: Smooth and responsive laser firing and hit detection.
