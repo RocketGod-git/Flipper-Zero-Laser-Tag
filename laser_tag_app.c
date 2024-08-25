@@ -228,9 +228,16 @@ void laser_tag_app_fire(LaserTagApp* app) {
 
     notification_message(app->notifications, &sequence_short_beep);
 
-    notification_message(app->notifications, &sequence_blink_blue_100);
+    if(game_state_get_team(app->game_state) == TeamBlue) {
+        notification_message(app->notifications, &sequence_blink_blue_100);
 
-    FURI_LOG_I(TAG, "Notifying user with blink blue and short beep");
+        FURI_LOG_I(TAG, "Notifying user with blink blue and short beep");
+    } else {
+        notification_message(app->notifications, &sequence_blink_red_100);
+
+        FURI_LOG_I(TAG, "Notifying user with blink red and short beep");
+    }
+
     app->need_redraw = true;
 }
 
