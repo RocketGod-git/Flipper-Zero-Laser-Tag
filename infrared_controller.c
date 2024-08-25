@@ -18,6 +18,7 @@ const NotificationSequence sequence_hit = {
 struct InfraredController {
     LaserTagTeam team;
     InfraredWorker* worker;
+    bool worker_rx_active;
     InfraredSignal* signal;
     NotificationApp* notification;
     bool hit_received;
@@ -104,6 +105,11 @@ void infrared_controller_free(InfraredController* controller) {
     FURI_LOG_I(TAG, "Freeing InfraredController");
 
     if(controller) {
+        if(controller->worker_rx_active) {
+            FURI_LOG_I(TAG, "Stopping RX worker");
+            infrared_worker_rx_stop(controller->worker);
+        }
+
         FURI_LOG_I(TAG, "Freeing InfraredWorker and InfraredSignal");
         infrared_worker_free(controller->worker);
         infrared_signal_free(controller->signal);
@@ -139,11 +145,22 @@ void infrared_controller_send(InfraredController* controller) {
         (unsigned long)message.address,
         (unsigned long)message.command);
 
+    if(controller->worker_rx_active) {
+        FURI_LOG_I(TAG, "Stopping RX worker");
+        infrared_worker_rx_stop(controller->worker);
+        controller->worker_rx_active = false;
+    }
+
     FURI_LOG_I(TAG, "Setting message for infrared signal");
     infrared_signal_set_message(controller->signal, &message);
 
     FURI_LOG_I(TAG, "Starting infrared signal transmission");
     infrared_signal_transmit(controller->signal);
+
+    if(!controller->worker_rx_active) {
+        infrared_worker_rx_start(controller->worker);
+        controller->worker_rx_active = true;
+    }
 
     FURI_LOG_I(TAG, "Infrared signal transmission completed");
 }
@@ -156,11 +173,11 @@ bool infrared_controller_receive(InfraredController* controller) {
         return false;
     }
 
-    infrared_worker_rx_start(controller->worker);
-
-    furi_delay_ms(250);
-
-    infrared_worker_rx_stop(controller->worker);
+    if(!controller->worker_rx_active) {
+        infrared_worker_rx_start(controller->worker);
+        controller->worker_rx_active = true;
+        furi_delay_ms(250);
+    }
 
     bool hit = controller->hit_received;
 
