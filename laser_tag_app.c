@@ -263,6 +263,10 @@ static bool laser_tag_app_enter_game_state(LaserTagApp* app) {
     laser_tag_view_update(app->view, app->game_state);
     FURI_LOG_D(TAG, "View updated with new game state");
 
+    if(app->ir_controller) {
+        infrared_controller_free(app->ir_controller);
+        app->ir_controller = NULL;
+    }
     app->ir_controller = infrared_controller_alloc();
     if(!app->ir_controller) {
         FURI_LOG_E(TAG, "Failed to allocate IR controller");
