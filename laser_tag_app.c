@@ -2,6 +2,7 @@
 #include "laser_tag_view.h"
 #include "infrared_controller.h"
 #include "game_state.h"
+#include "lfrfid_reader.h"
 #include <furi.h>
 #include <gui/gui.h>
 #include <input/input.h>
@@ -20,6 +21,7 @@ struct LaserTagApp {
     GameState* game_state;
     LaserTagState state;
     bool need_redraw;
+    LFRFIDReader* reader;
 };
 
 const NotificationSequence sequence_vibro_1 = {&message_vibro_on, &message_vibro_off, NULL};
@@ -144,6 +146,55 @@ static void laser_tag_app_draw_callback(Canvas* canvas, void* context) {
     FURI_LOG_D(TAG, "Exiting draw callback");
 }
 
+static bool matching_team(LaserTagApp* app, uint8_t data) {
+    if(data == 0) {
+        return true;
+    } else if(game_state_get_team(app->game_state) == TeamRed) {
+        return data == 0xA1;
+    } else if(game_state_get_team(app->game_state) == TeamBlue) {
+        return data == 0xB2;
+    }
+    return false;
+}
+
+static void tag_callback(uint8_t* data, uint8_t length, void* context) {
+    LaserTagApp* app = (LaserTagApp*)context;
+
+    if(length != 5) {
+        FURI_LOG_W(TAG, "Tag is not for game.  Length: %d", length);
+        return;
+    }
+
+    if(data[0] != 0x13 || data[1] != 0x37) {
+        FURI_LOG_D(
+            TAG,
+            "Tag is not for game.  Data: %02x %02x %02x %02x %02x",
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+            data[4]);
+        return;
+    }
+
+    if(matching_team(app, data[2])) {
+        if(data[3] == 0xFD) {
+            uint16_t max_delta_ammo = data[4];
+            uint16_t ammo = game_state_get_ammo(app->game_state);
+            uint16_t delta_ammo = INITIAL_AMMO - ammo;
+            if(delta_ammo > max_delta_ammo) {
+                delta_ammo = max_delta_ammo;
+            }
+            game_state_increase_ammo(app->game_state, delta_ammo);
+            FURI_LOG_D(TAG, "Increased ammo by: %d", delta_ammo);
+        } else {
+            FURI_LOG_W(TAG, "Tag action unknown: %02x %02x", data[3], data[4]);
+        }
+    } else {
+        FURI_LOG_I(TAG, "Tag not for team: %02x", data[2]);
+    }
+}
+
 LaserTagApp* laser_tag_app_alloc() {
     FURI_LOG_D(TAG, "Allocating Laser Tag App");
     LaserTagApp* app = malloc(sizeof(LaserTagApp));
@@ -186,6 +237,9 @@ LaserTagApp* laser_tag_app_alloc() {
     }
     FURI_LOG_I(TAG, "Timer allocated");
 
+    app->reader = lfrfid_reader_alloc();
+    lfrfid_reader_set_tag_callback(app->reader, "EM4100", tag_callback, app);
+
     furi_timer_start(app->timer, furi_kernel_get_tick_frequency());
     FURI_LOG_D(TAG, "Timer started");
 
@@ -204,6 +258,10 @@ void laser_tag_app_free(LaserTagApp* app) {
     furi_message_queue_free(app->event_queue);
     if(app->ir_controller) {
         infrared_controller_free(app->ir_controller);
+    }
+    if(app->reader) {
+        lfrfid_reader_free(app->reader);
+        app->reader = NULL;
     }
     free(app->game_state);
     furi_record_close(RECORD_GUI);
@@ -355,6 +413,27 @@ int32_t laser_tag_app(void* p) {
                         case InputKeyOk:
                             FURI_LOG_I(TAG, "OK key pressed, firing laser");
                             laser_tag_app_fire(app);
+                            break;
+                        case InputKeyUp:
+                            FURI_LOG_I(TAG, "Up key pressed, scanning for ammo");
+                            notification_message(app->notifications, &sequence_short_beep);
+                            uint16_t ammo = game_state_get_ammo(app->game_state);
+                            infrared_controller_pause(app->ir_controller);
+                            lfrfid_reader_start(app->reader);
+                            for(int i = 0; i < 30; i++) {
+                                furi_delay_ms(100);
+                                if(ammo != game_state_get_ammo(app->game_state)) {
+                                    break;
+                                }
+                            }
+                            lfrfid_reader_stop(app->reader);
+                            infrared_controller_resume(app->ir_controller);
+                            if(ammo != game_state_get_ammo(app->game_state)) {
+                                notification_message(app->notifications, &sequence_success);
+                            } else {
+                                notification_message(app->notifications, &sequence_error);
+                            }
+                            app->need_redraw = true;
                             break;
                         default:
                             break;
