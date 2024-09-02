@@ -187,3 +187,19 @@ bool infrared_controller_receive(InfraredController* controller) {
 
     return hit;
 }
+
+void infrared_controller_pause(InfraredController* controller) {
+    if(controller->worker_rx_active) {
+        FURI_LOG_I(TAG, "Stopping RX worker");
+        infrared_worker_rx_stop(controller->worker);
+        controller->worker_rx_active = false;
+    }
+}
+
+void infrared_controller_resume(InfraredController* controller) {
+    if(!controller->worker_rx_active) {
+        FURI_LOG_I(TAG, "Starting RX worker");
+        infrared_worker_rx_start(controller->worker);
+        controller->worker_rx_active = true;
+    }
+}
