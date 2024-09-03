@@ -3,6 +3,9 @@
 #include <infrared_worker.h>
 #include <infrared_signal.h>
 #include <notification/notification_messages.h>
+#include <furi_hal_gpio.h>
+#include <furi_hal_power.h>
+#include <furi_hal_infrared.h>
 
 #define TAG "InfraredController"
 
@@ -15,15 +18,46 @@ const NotificationSequence sequence_hit = {
     NULL,
 };
 
-struct InfraredController {
-    LaserTagTeam team;
-    InfraredWorker* worker;
-    bool worker_rx_active;
-    InfraredSignal* signal;
-    NotificationApp* notification;
-    bool hit_received;
-    bool processing_signal;
+const NotificationSequence sequence_bloop = {
+    &message_note_g3,
+    &message_delay_50,
+    &message_sound_off,
+    NULL,
 };
+
+extern const NotificationSequence sequence_short_beep;
+
+static bool external_board_connected = false;
+
+static void infrared_setup_external_board(bool enable) {
+    if(enable) {
+        furi_hal_gpio_init(&gpio_ext_pa7, GpioModeOutputPushPull, GpioPullNo, GpioSpeedVeryHigh);
+        furi_hal_power_enable_otg();
+        furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinExtPA7);
+    } else {
+        furi_hal_gpio_init(&gpio_ext_pa7, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
+        furi_hal_power_disable_otg();
+        furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinInternal);
+    }
+}
+
+void update_infrared_board_status(InfraredController* controller) {
+    if(!controller || !controller->notification) return;
+
+    FuriHalInfraredTxPin detected_pin = furi_hal_infrared_detect_tx_output();
+
+    if(detected_pin == FuriHalInfraredTxPinExtPA7 && !external_board_connected) {
+        external_board_connected = true;
+        infrared_setup_external_board(true);
+        notification_message(controller->notification, &sequence_short_beep);
+        FURI_LOG_I(TAG, "External infrared board connected and powered.");
+    } else if(detected_pin == FuriHalInfraredTxPinInternal && external_board_connected) {
+        external_board_connected = false;
+        infrared_setup_external_board(false);
+        notification_message(controller->notification, &sequence_bloop);
+        FURI_LOG_I(TAG, "External infrared board disconnected and power disabled.");
+    }
+}
 
 static void infrared_rx_callback(void* context, InfraredWorkerSignal* received_signal) {
     FURI_LOG_I(TAG, "RX callback triggered");

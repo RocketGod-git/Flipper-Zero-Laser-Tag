@@ -361,6 +361,8 @@ int32_t laser_tag_app(void* p) {
     while(running) {
         FURI_LOG_D(TAG, "Start of main loop iteration");
 
+        update_infrared_board_status(app->ir_controller);
+
         FuriStatus status = furi_message_queue_get(app->event_queue, &event, 100);
         if(status == FuriStatusOk) {
             FURI_LOG_D(TAG, "Received input event: type=%d, key=%d", event.type, event.key);
