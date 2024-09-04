@@ -1,7 +1,7 @@
-# Flipper-Zero-Laser-Tag
+# Laser Tag
 **Turn your Flipper Zero into a Laser Tag Device!**
 
-## Real World Team based Laser Tag game
+## Real World - Team based Laser Tag game
 Use Flipper Zero as your laser blaster, RFID scan for power-ups, and automatic detection of add-on weapons to GPIO such as the Rabbit Labs Masta-Blasta for arena style play.
 
 ## Key Features:
