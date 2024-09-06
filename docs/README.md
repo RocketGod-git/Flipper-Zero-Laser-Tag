@@ -21,11 +21,11 @@ Use Flipper Zero as your laser blaster, RFID scan for power-ups, and automatic d
 5. **RFID Powerups**: Press the UP button during gameplay to scan a Powerup Tag.
 
 ## Current Powerups for RFID Tags (T5577/EM4100):
-- **Universal Ammo Refill**: `13 37 00 FD 0A` – Increases ammo by `0x0A` for any player.
-- **Red Team Ammo Refill**: `13 37 A1 FD 0A` – Increases ammo by `0x0A` for the Red player.
-- **Blue Team Ammo Refill**: `13 37 B2 FD 0A` – Increases ammo by `0x0A` for the Blue player.
+- **Universal Ammo Refill**: 13 37 00 FD 0A – Increases ammo by 0x0A for any player.
+- **Red Team Ammo Refill**: 13 37 A1 FD 0A – Increases ammo by 0x0A for the Red player.
+- **Blue Team Ammo Refill**: 13 37 B2 FD 0A – Increases ammo by 0x0A for the Blue player.
 
-*Tip*: You can modify the last byte (e.g., `0A`) to change the amount of ammo refilled. Stay tuned for future updates and new powerups!
+*Tip*: You can modify the last byte (e.g., 0A) to change the amount of ammo refilled. Stay tuned for future updates and new powerups!
 
 ## Developers:
 - **RocketGod** (@RocketGod-git)
