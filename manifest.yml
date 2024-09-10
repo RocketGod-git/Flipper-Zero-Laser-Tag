@@ -13,8 +13,8 @@ screenshots:
 short_description: 'Laser Tag game for Flipper Zero'
 sourcecode:
   location:
-    commit_sha: f9b4be203cb2e47636477dbbd6971c0b8ce9f7b6
+    commit_sha: f4ffc246367430547f649fc5a493bb939c9f6e7d3
     origin: https://github.com/RocketGod-git/Flipper-Zero-Laser-Tag.git
     subdir:
   type: git
-version: 1.0
+version: 2.0
