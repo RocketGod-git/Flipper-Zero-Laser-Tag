@@ -109,7 +109,7 @@ static void infrared_rx_callback(void* context, InfraredWorkerSignal* received_s
     }
 
     FURI_LOG_I(TAG, "RX callback completed");
-    furi_timer_pending_callback(infrared_reset, controller, FuriWaitForever);
+    furi_timer_pending_callback(infrared_reset, controller, 0);
 }
 
 InfraredController* infrared_controller_alloc() {
